@@ -33,7 +33,7 @@
 
           buildPhase = ''
             export HOME=$TMPDIR
-            zig build --prefix $out
+            zig build --prefix $out -Doptimize=ReleaseSmall
           '';
         };
 
