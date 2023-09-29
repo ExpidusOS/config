@@ -13,7 +13,7 @@ pub fn randomChar(rand: std.rand.Random) u8 {
 pub fn randomString(rand: std.rand.Random, buf: []u8) void {
     var i: usize = 0;
 
-    while (i != buf.len) {
+    while (i != buf.len) : (i += 1) {
         const ch = randomChar(rand);
         buf[i] = ch;
     }
