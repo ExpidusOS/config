@@ -36,6 +36,8 @@
             zig build --prefix $out -Doptimize=ReleaseSmall
           '';
 
+          doCheck = true;
+
           checkPhase = ''
             zig build test
           '';
