@@ -35,6 +35,10 @@
             export HOME=$TMPDIR
             zig build --prefix $out -Doptimize=ReleaseSmall
           '';
+
+          checkPhase = ''
+            zig build test
+          '';
         };
 
         devShells.default = pkgs.mkShell {
