@@ -6,7 +6,7 @@ const Self = @This();
 
 const Raw = struct {
     hostname: []const u8,
-    lastState: ?LastState,
+    lastState: ?LastState = null,
 };
 
 allocator: std.mem.Allocator,

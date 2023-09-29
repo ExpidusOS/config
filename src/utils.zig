@@ -41,7 +41,9 @@ pub fn readFile(allocator: std.mem.Allocator, path: []const u8) ![]u8 {
 pub fn readJsonFile(comptime T: type, allocator: std.mem.Allocator, path: []const u8) anyerror!std.json.Parsed(T) {
     const buffer = try readFile(allocator, path);
     defer allocator.free(buffer);
-    return try std.json.parseFromSlice(T, allocator, buffer, .{});
+    return try std.json.parseFromSlice(T, allocator, buffer, .{
+        .allocate = .alloc_always,
+    });
 }
 
 pub fn writeFile(path: []const u8, value: []const u8) !void {
