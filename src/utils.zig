@@ -47,13 +47,17 @@ pub fn readJsonFile(comptime T: type, allocator: std.mem.Allocator, path: []cons
 }
 
 pub fn writeFile(path: []const u8, value: []const u8) !void {
-    const file = try std.fs.openFileAbsolute(path, .{});
+    const file = try std.fs.openFileAbsolute(path, .{
+        .mode = .write_only,
+    });
     defer file.close();
     try file.writeAll(value);
 }
 
 pub fn writeJsonFile(path: []const u8, value: anytype) !void {
-    const file = try std.fs.openFileAbsolute(path, .{});
+    const file = try std.fs.openFileAbsolute(path, .{
+        .mode = .write_only,
+    });
     defer file.close();
     try std.json.stringify(value, .{}, file.writer());
 }
