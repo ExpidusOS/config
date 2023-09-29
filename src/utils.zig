@@ -1,13 +1,8 @@
 const std = @import("std");
 
 pub fn randomChar(rand: std.rand.Random) u8 {
-    const isCaptial = rand.boolean();
-
-    var offset: u8 = 0;
-    if (!isCaptial) {
-        offset = 32;
-    }
-    return rand.uintAtMost(u8, 25) + 90 + offset;
+    const offset: u8 = if (rand.boolean()) 'A' else 'a';
+    return rand.uintAtMost(u8, 25) + offset;
 }
 
 pub fn randomString(rand: std.rand.Random, buf: []u8) void {
@@ -47,9 +42,9 @@ pub fn readJsonFile(comptime T: type, allocator: std.mem.Allocator, path: []cons
 }
 
 pub fn writeFile(path: []const u8, value: []const u8) !void {
-    const file = try std.fs.openFileAbsolute(path, .{
+    const file = std.fs.openFileAbsolute(path, .{
         .mode = .write_only,
-    });
+    }) catch try std.fs.createFileAbsolute(path, .{});
     defer file.close();
     try file.writeAll(value);
 }
