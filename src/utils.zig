@@ -1,5 +1,38 @@
 const std = @import("std");
 
+pub fn readSupportedLocales(allocator: std.mem.Allocator) !std.ArrayList([]const u8) {
+    const localeArchive = try std.fs.realpathAlloc(allocator, std.os.getenv("LOCALE_ARCHIVE") orelse "/run/current-system/sw/lib/locale/locale-archive");
+    defer allocator.free(localeArchive);
+
+    const rootpath = std.fs.path.dirname(std.fs.path.dirname(std.fs.path.dirname(localeArchive)));
+    const supportedPath = std.fs.path.join(allocator, &.{ rootpath, "share", "i18n", "SUPPORTED" });
+    defer allocator.free(supportedPath);
+
+    const supportedFile = try std.fs.openFileAbsolute(supportedPath, .{});
+    defer supportedFile.close();
+
+    const supportedMeta = try supportedFile.metadata();
+
+    const list = std.ArrayList([]const u8).init(allocator);
+    errdefer list.deinit();
+
+    while (true) {
+        const supported = try supportedFile.reader().readUntilDelimiterAlloc(allocator, '\n', supportedMeta.size());
+        defer allocator.free(supported);
+
+        if (!std.mem.startsWith(u8, supported, "SUPPORTED-LOCALES=")) continue;
+
+        const kv = std.mem.splitAny(u8, supported, "=");
+        kv.next();
+
+        const value = kv.next();
+        const values = std.mem.splitAny(u8, value, " ");
+        for (values) |v| try list.append(try allocator.dupe(u8, v));
+        break;
+    }
+    return list;
+}
+
 pub fn randomChar(rand: std.rand.Random) u8 {
     const offset: u8 = if (rand.boolean()) 'A' else 'a';
     return rand.uintAtMost(u8, 25) + offset;
