@@ -4,8 +4,8 @@ pub fn readSupportedLocales(allocator: std.mem.Allocator) !std.ArrayList([]const
     const localeArchive = try std.fs.realpathAlloc(allocator, std.os.getenv("LOCALE_ARCHIVE") orelse "/run/current-system/sw/lib/locale/locale-archive");
     defer allocator.free(localeArchive);
 
-    const rootpath = std.fs.path.dirname(std.fs.path.dirname(std.fs.path.dirname(localeArchive)));
-    const supportedPath = std.fs.path.join(allocator, &.{ rootpath, "share", "i18n", "SUPPORTED" });
+    const rootpath = std.fs.path.dirname(std.fs.path.dirname(std.fs.path.dirname(localeArchive).?).?).?;
+    const supportedPath = try std.fs.path.join(allocator, &.{ rootpath, "share", "i18n", "SUPPORTED" });
     defer allocator.free(supportedPath);
 
     const supportedFile = try std.fs.openFileAbsolute(supportedPath, .{});
@@ -13,7 +13,7 @@ pub fn readSupportedLocales(allocator: std.mem.Allocator) !std.ArrayList([]const
 
     const supportedMeta = try supportedFile.metadata();
 
-    const list = std.ArrayList([]const u8).init(allocator);
+    var list = std.ArrayList([]const u8).init(allocator);
     errdefer list.deinit();
 
     while (true) {
@@ -22,12 +22,12 @@ pub fn readSupportedLocales(allocator: std.mem.Allocator) !std.ArrayList([]const
 
         if (!std.mem.startsWith(u8, supported, "SUPPORTED-LOCALES=")) continue;
 
-        const kv = std.mem.splitAny(u8, supported, "=");
-        kv.next();
+        var kv = std.mem.splitAny(u8, supported, "=");
+        _ = kv.next();
 
-        const value = kv.next();
-        const values = std.mem.splitAny(u8, value, " ");
-        for (values) |v| try list.append(try allocator.dupe(u8, v));
+        const value = kv.next().?;
+        var values = std.mem.splitAny(u8, value, " ");
+        while (values.next()) |v| try list.append(try allocator.dupe(u8, v));
         break;
     }
     return list;
