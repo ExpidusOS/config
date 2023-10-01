@@ -23,6 +23,12 @@ Type: `string` **required**
 
 This changes the system's hostname.
 
+#### `locale`
+
+Type: `string` **required**
+
+This changes the system's locale.
+
 ### Vendor
 
 *To-do*: this side of the config system is not implemented yet.

@@ -1,5 +1,18 @@
 const std = @import("std");
 
+pub fn isLocaleSupported(allocator: std.mem.Allocator, locale: []const u8) !bool {
+    const locales = try readSupportedLocales(allocator);
+    defer {
+        for (locales.items) |v| allocator.free(v);
+        locales.deinit();
+    }
+
+    for (locales.items) |v| {
+        if (std.mem.startsWith(u8, v, locale)) return true;
+    }
+    return false;
+}
+
 pub fn readSupportedLocales(allocator: std.mem.Allocator) !std.ArrayList([]const u8) {
     const localeArchive = try std.fs.realpathAlloc(allocator, std.os.getenv("LOCALE_ARCHIVE") orelse "/run/current-system/sw/lib/locale/locale-archive");
     defer allocator.free(localeArchive);

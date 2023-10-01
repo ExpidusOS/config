@@ -16,9 +16,15 @@ pub fn main() !void {
     var sysconfig = try SystemConfig.fromFile(alloc, "/data/config/system.json");
     defer sysconfig.deinit();
 
+    if (!try utils.isLocaleSupported(alloc, sysconfig.locale)) {
+        std.log.err("Locale {s} is not supported by the system.", .{sysconfig.locale});
+        return error.NotSupported;
+    }
+
     if (sysconfig.lastState) |lastState| {
         _ = std.os.linux.umount("/etc/hostname");
         _ = std.os.linux.umount("/etc/hosts");
+        _ = std.os.linux.umount("/etc/locale.conf");
         try std.fs.deleteTreeAbsolute(lastState.path);
     }
 
@@ -48,6 +54,16 @@ pub fn main() !void {
 
     try utils.writeFile(hostsPath, hosts);
 
+    const localePath = try std.fs.path.join(alloc, &.{ tmpdir, "locale.conf" });
+    defer alloc.free(localePath);
+
+    const localeConfig = try std.fmt.allocPrint(alloc,
+        \\LANG={s}
+    , .{sysconfig.locale});
+    defer alloc.free(localeConfig);
+    try utils.writeFile(localePath, localeConfig);
+
     try utils.bindMount(hostnamePath, "/etc/hostname");
     try utils.bindMount(hostsPath, "/etc/hosts");
+    try utils.bindMount(localePath, "/etc/locale.conf");
 }
