@@ -21,10 +21,19 @@ pub fn main() !void {
         return error.NotSupported;
     }
 
+    const timezone = try std.fmt.allocPrint(alloc, "/etc/zoneinfo/{s}", .{sysconfig.timezone});
+    defer alloc.free(timezone);
+
+    if (std.fs.accessAbsolute(timezone, .{})) {} else |_| {
+        std.log.err("Timezone {s} does not exist.", .{sysconfig.timezone});
+        return error.FileNotFound;
+    }
+
     if (sysconfig.lastState) |lastState| {
         _ = std.os.linux.umount("/etc/hostname");
         _ = std.os.linux.umount("/etc/hosts");
         _ = std.os.linux.umount("/etc/locale.conf");
+        _ = std.os.linux.umount("/etc/localtime");
         try std.fs.deleteTreeAbsolute(lastState.path);
     }
 
@@ -66,4 +75,5 @@ pub fn main() !void {
     try utils.bindMount(hostnamePath, "/etc/hostname");
     try utils.bindMount(hostsPath, "/etc/hosts");
     try utils.bindMount(localePath, "/etc/locale.conf");
+    try utils.bindMount(timezone, "/etc/localtime");
 }
